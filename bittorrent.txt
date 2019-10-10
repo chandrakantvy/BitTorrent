@@ -14,5 +14,4 @@ torrent client {
 		ch[i] = list of chunks available with p[i];
 	create your own map of chunks, for each chunk list of peers
 	start downloading the chunks using the algo
-		
 }
