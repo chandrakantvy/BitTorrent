@@ -10,6 +10,53 @@ import struct
 from bitstring import BitArray
 
 
+# def get_data(client_bitfield, block_length, last_block_size):
+#     for piece_num in range(len(client_bitfield)):
+#         if not client_bitfield[piece_num]:
+#             piece_data = returns_a_piece(client_bitfield, piece_num, block_length, last_block_size)
+#             write_piece_to_file(piece_data, piece_num)
+#             update_bitfield(self.index)
+
+
+# def returns_a_piece(self, tracker_bitfield, piece_num, block_length, last_block_size):
+#     '''Constructs and sends a request for one piece that peer has and user does not'''
+#     print
+#     "Sending request", piece_num
+#     if self.bitfield[piece_num]:
+#         print
+#         "Found a piece I don't have"
+#         piece_data = ''
+#         # peer has piece downloader does not
+#
+#         for block_num in range(file_info.whole_blocks_per_piece):
+#             block = self.get_block(piece_num, block_num, block_length)
+#             piece_data += block
+#         if last_block_size:
+#             block = self.get_block(piece_num, block_num, last_block_size)
+#             piece_data += block
+#         return piece_data
+#
+#
+# def get_block(self, piece_num, block_num, block_length):
+#     print
+#     "requesting a block"
+#     block_data = ''
+#     request_msg = self.make_request_msg(13, 6, piece_num, block_num * block_length, block_length)
+#     self.sock.send(request_msg)
+#     while len(block_data) < block_length + 13:  # todo: learn why 13
+#         block_data += self.sock.recv(2 ** 15)
+#     return block_data
+
+
+def make_request_msg(self, thirteen, six, piece_num, start_point, block_length):
+    request_message = (struct.pack('!I', thirteen) + struct.pack('!B', six) +
+                       struct.pack('!I', piece_num) +
+                       struct.pack('!I', start_point) +
+                       struct.pack('!I', block_length))
+    # TODO: learn what thirteen and six are
+    return request_message
+
+
 def complete_bitfield(have_index):
     """ updating the bitfield """
     active_peers[0]['bitfield'][have_index] = 1
@@ -43,7 +90,7 @@ def parse_data(data):
             try:
                 print("Trying to parse data")
                 message_type = message_types[data[4]]
-                print(message_type)
+                # print(message_type)
             except KeyError:
                 receive_rem_data()
             length = length - 1
@@ -123,7 +170,7 @@ def connect_with_peers(ip_and_port):
 def make_handshake(i_h, p_i):
     """Creating handshake message """
     handshake = b''.join([chr(19).encode(), b'BitTorrent protocol', (chr(0) * 8).encode(), i_h, p_i.encode()])
-    print(handshake)
+    # print(handshake)
     return handshake
 
 
@@ -221,7 +268,7 @@ with open(torrent_File, "rb") as tf:
         if announce.startswith('http'):
             tracker_url = create_tracker_url(decoded_tracker_file['announce'], params)
         try:
-            response, gitconnected_to_tracker = tracker_response(tracker_url)
+            response, connected_to_tracker = tracker_response(tracker_url)
         except TimeoutError:
             print("couldn't connect to trackers:Timeout")
 
@@ -235,17 +282,16 @@ with open(torrent_File, "rb") as tf:
     else:
         print("...couldn't connected to tracker")
 
+    # op_file = open(file_name, "wb")
     client_bitfield = BitArray(int(number_of_pieces))
     active_peers = []
 
-    print(decoded_tracker_response)
     peers_dict = make_peers(decoded_tracker_response['peers'])
     peer_socket = connect_with_peers(peers_dict[0])
     our_handshake = make_handshake(info_hash, peer_id)
     send_handshake()
-    # print(len(active_peers), active_peers[0], decoded_tracker_response['peers'][0]['peer id'])
 
     active_peers[0]['bitfield'] = BitArray(int(number_of_pieces))
     send_interested(active_peers[0])  # handle Nonetype error
-    parse_data(active_peers[0]['data'])
-    op_file = open(file_name, "wb")
+    # parse_data(active_peers[0]['data'])
+    # get_data(client_bitfield, block_length, last_block_size)
